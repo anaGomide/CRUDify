@@ -13,7 +13,7 @@ collection = db['users']
 
 @app.route('/')
 def index():
-    return "API it`s run!"
+    return "API is running!"
 
 @app.route('/users/list', methods=['GET'])
 def list_users():
@@ -28,7 +28,7 @@ def view_user(id):
     if user:
         user['_id'] = str(user['_id'])
         return jsonify(user)
-    return jsonify({'error': 'User Not Found'}), 404
+    return jsonify({'error': 'User not found'}), 404
 
 @app.route('/users/create', methods=['POST'])
 def create_user():
@@ -43,15 +43,15 @@ def update_user(id):
     data['updated_ts'] = datetime.utcnow().timestamp()
     result = collection.update_one({'_id': ObjectId(id)}, {'$set': data})
     if result.modified_count:
-        return jsonify({'message': 'User Update!'})
-    return jsonify({'error': 'Nenhum usuário atualizado!'}), 404
+        return jsonify({'message': 'User updated!'})
+    return jsonify({'error': 'No user updated!'}), 404
 
 @app.route('/users/delete/<id>', methods=['DELETE'])
 def delete_user(id):
     result = collection.delete_one({'_id': ObjectId(id)})
     if result.deleted_count:
-        return jsonify({'message': 'Usuário deletado!'})
-    return jsonify({'error': 'Usuário não encontrado'}), 404
+        return jsonify({'message': 'User deleted!'})
+    return jsonify({'error': 'User not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

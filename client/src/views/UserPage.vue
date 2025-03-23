@@ -70,7 +70,7 @@ export default {
       username: '',
       password: '',
       roles: [],
-      isActive: '',
+      active: false,
       timezone: '',
       created_ts: '',
       updated_ts: ''

@@ -56,7 +56,7 @@ def main():
             created_ts=created_ts,
             updated_ts=updated_ts
         )
-        resultado = collection.insert_one({
+        result = collection.insert_one({
             'username': user.username,
             'password': user.password,
             'roles': user.roles,
@@ -65,7 +65,7 @@ def main():
             'created_ts': user.created_ts,
             'updated_ts': user.updated_ts
         })
-        print(f"Usuário {user.username} inserido com _id: {resultado.inserted_id}")
+        print(f"User {user.username} inserted with _id: {result.inserted_id}")
 
 if __name__ == '__main__':
     main()

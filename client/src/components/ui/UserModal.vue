@@ -14,24 +14,17 @@
           <v-select v-model="localUser.roles" :items="roleOptions" label="Roles" multiple :rules="[rules.required]"
             required></v-select>
 
-          <v-select v-model="localUser.isActive" :items="activeOptions" label="Is Active?" :rules="[rules.required]"
-            required></v-select>
+          <!-- Updated v-select to handle active (boolean) -->
+          <v-select v-model="localUser.active" :items="activeOptions" label="Active?" item-title="text"
+            item-value="value" :rules="[rules.required]" required></v-select>
 
           <v-select v-model="localUser.timezone" :items="timezoneOptions" label="Timezone" :rules="[rules.required]"
             required></v-select>
 
           <template v-if="isEditMode">
-            <v-text-field
-              v-model="localUser.created_ts"
-              label="Created At"
-              disabled
-            ></v-text-field>
-
-            <v-text-field
-              v-model="localUser.updated_ts"
-              label="Last Updated"
-              disabled
-            ></v-text-field>
+            <!-- Use computed properties to display formatted dates -->
+            <v-text-field v-model="createdDate" label="Created At" disabled></v-text-field>
+            <v-text-field v-model="updatedDate" label="Last Updated" disabled></v-text-field>
           </template>
         </v-form>
       </v-card-text>
@@ -49,6 +42,7 @@
 
 <script>
 import { ref, reactive, computed, watch } from 'vue'
+import { formatDate } from "../../helpers/dateHelper";
 
 export default {
   name: 'UserModal',
@@ -63,7 +57,7 @@ export default {
         username: '',
         password: '',
         roles: [],
-        isActive: '',
+        active: false,
         timezone: '',
         created_ts: '',
         updated_ts: ''
@@ -80,12 +74,14 @@ export default {
       get: () => props.visible,
       set: (value) => emit('update:visible', value)
     })
-
     const valid = ref(false)
     const userForm = ref(null)
     const localUser = reactive({ ...props.userData })
     const roleOptions = ['Administrator', 'Manager', 'Test', 'No Role']
-    const activeOptions = ['Yes', 'No']
+    const activeOptions = [
+      { text: 'Yes', value: true },
+      { text: 'No', value: false }
+    ]
     const timezoneOptions = [
       'UTC',
       'America/New_York',
@@ -96,8 +92,17 @@ export default {
       'Asia/Hong_Kong'
     ]
     const rules = {
-      required: value => !!value || 'Required.'
+      required: value => value !== null && value !== undefined && value !== '' || 'Required.'
     }
+
+    // Create computed properties for formatted dates.
+    const createdDate = computed(() => {
+      return localUser.created_ts ? formatDate(localUser.created_ts) : ''
+    })
+
+    const updatedDate = computed(() => {
+      return localUser.updated_ts ? formatDate(localUser.updated_ts) : ''
+    })
 
     watch(
       () => dialog.value,
@@ -107,10 +112,8 @@ export default {
             username: '',
             password: '',
             roles: [],
-            isActive: '',
-            preferences: {
-              timezone: ''
-            },
+            active: false,
+            timezone: '',
             created_ts: '',
             updated_ts: '',
             ...props.userData
@@ -125,7 +128,7 @@ export default {
         username: localUser.username,
         password: localUser.password,
         roles: localUser.roles,
-        active: localUser.isActive === 'Yes',
+        active: localUser.active,
         preferences: {
           timezone: localUser.timezone
         }
@@ -149,7 +152,9 @@ export default {
       timezoneOptions,
       rules,
       handleSave,
-      handleCancel
+      handleCancel,
+      createdDate,
+      updatedDate
     }
   }
 }
