@@ -14,7 +14,6 @@
           <v-select v-model="localUser.roles" :items="roleOptions" label="Roles" multiple :rules="[rules.required]"
             required></v-select>
 
-          <!-- Updated v-select to handle active (boolean) -->
           <v-select v-model="localUser.active" :items="activeOptions" label="Active?" item-title="text"
             item-value="value" :rules="[rules.required]" required></v-select>
 
@@ -22,7 +21,6 @@
             required></v-text-field>
 
           <template v-if="isEditMode">
-            <!-- Use computed properties to display formatted dates -->
             <v-text-field v-model="createdDate" label="Created At" disabled></v-text-field>
             <v-text-field v-model="updatedDate" label="Last Updated" disabled></v-text-field>
           </template>
@@ -86,7 +84,6 @@ export default {
       required: value => value !== null && value !== undefined && value !== '' || 'Required.'
     }
 
-    // Create computed properties for formatted dates.
     const createdDate = computed(() => {
       return localUser.created_ts ? formatDate(localUser.created_ts) : ''
     })

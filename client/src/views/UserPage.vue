@@ -43,7 +43,6 @@
       </v-card-actions>
     </v-card>
 
-    <!-- Modal para edição -->
     <UserModal v-model:visible="showModal" :isEditMode="true" :userData="user" @save="handleSaveUser"
       @cancel="handleCancel" />
   </v-container>
@@ -99,7 +98,6 @@ export default {
       try {
         await userService.updateUser(user._id, payload)
         console.log('User updated:', payload)
-        // Atualiza os dados locais com os valores enviados
         Object.assign(user, {
           username: payload.username,
           password: payload.password,
