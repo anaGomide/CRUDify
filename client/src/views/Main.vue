@@ -1,156 +1,94 @@
 <template>
   <v-container>
-    <v-btn class="mb-4" color="primary" @click="openCreateModal">Criar Usuário</v-btn>
-    <!-- <pre>{{ users }}</pre> -->
+    <v-btn class="mb-4" color="primary" @click="openCreateModal">
+      Create User
+    </v-btn>
 
-    <v-table>
-    <thead>
-      <tr>
-        <th class="text-left">
-          Username 
-        </th>
-        <th class="text-left">
-          Roles 
-        </th>
-        <th class="text-left">
-          Timezone 
-        </th>
-        <th class="text-left">
-          Is Active?
-        </th>
-        <th class="text-left">
-          Last Updated At
-        </th>
-        <th class="text-left">
-          Created At
-        </th>
-        <th class="text-left">
-          Actions
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-        v-for="user in users"
-        :key="user._id"
-      >
-        <td>{{ user.username }}</td>
-        <td>{{ user.roles }}</td>
-        <td>{{ user.preferences.timezone }}</td>
-        <td>{{ user.active }}</td>
-        <td> last update </td>
-        <td>{{ user.created_ts }}</td>
-        <td> actions here</td>
-
-      </tr>
-    </tbody>
-  </v-table>
-
-    <!-- <v-data-table :items="users" :headers="headers" class="elevation-1">
-      <template v-slot:item.username="{ item }">
-        <router-link :to="{ name: 'UserPage', params: { id: item._id.$oid } }">
-          {{ item.username }}
-        </router-link>
+    <DynamicTable :items="users" :headers="tableHeaders">
+      <!-- Slot for the actions column (Edit and Delete) -->
+      <template #actions="{ item }">
+        <v-btn icon small @click="openEditModal(item)">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn icon small @click="confirmDelete(item)">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
       </template>
-      <template v-slot:item.actions="{ item }">
-        <v-btn small color="secondary" @click="openEditModal(item)">Editar</v-btn>
-        <v-btn small color="error" @click="confirmDelete(item)">Excluir</v-btn>
-      </template>
-      <template v-slot:item.created_ts="{ item }">
-        {{ formatDate(item.created_ts) }}
-      </template>
-    </v-data-table> -->
-
-    <!-- Modal para Criação/Edição -->
-    <!-- <UserFormDialog
-      v-if="dialogVisible"
-      :user="selectedUser"
-      @close="dialogVisible = false"
-      @saved="handleSaved"
-    /> -->
+    </DynamicTable>
   </v-container>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue'
 import userService from '../services/userService'
-//import UserFormDialog from '@/components/UserFormDialog.vue'
+import DynamicTable from '../components/ui/DynamicTable.vue'
 
 export default {
   name: 'Main',
-  //components: { UserFormDialog },
+  components: { DynamicTable },
   setup() {
     const users = ref([])
-    const dialogVisible = ref(false)
-    const selectedUser = ref(null)
 
-    // Definição dos cabeçalhos para o v-data-table
-    const headers = [
-      { text: 'Nome de Usuário', value: 'username' },
-      { text: 'Funções', value: 'roles' },
-      { text: 'Fuso Horário', value: 'preferences.timezone' },
-      { text: 'Está Ativo?', value: 'active' },
-      { text: 'Criado Em', value: 'created_ts' },
-      { text: 'Ações', value: '', sortable: false }
-    ]
+    const formatDate = (timestamp) => {
+      const date = new Date(timestamp * 1000)
+      const pad = (num) => num.toString().padStart(2, '0')
+      return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    }
+    const tableHeaders = ref([
+      { field: 'username', label: 'Username' },
+      { 
+        field: 'roles', 
+        label: 'Roles', 
+        render: (item) => Array.isArray(item.roles) ? item.roles.join(', ') : item.roles 
+      },
+      { field: 'preferences.timezone', label: 'Timezone' },
+      { 
+        field: 'active', 
+        label: 'Is Active?', 
+        render: (item) => item.active ? 'Yes' : 'No'
+      },
+      { field: 'updated_ts', label: 'Last Updated At', render: (item) => formatDate(item.updated_ts) },
+      { field: 'created_ts', label: 'Created At', render: (item) => formatDate(item.created_ts) }
+    ])
 
     const fetchUsers = async () => {
       try {
         const response = await userService.listUsers()
-        console.log("Dados recebidos:", response.data)
-        // Se a resposta for um array, use direto; se for um objeto, extraia a propriedade correta
         users.value = Array.isArray(response.data)
           ? response.data
           : response.data.users || []
       } catch (error) {
-        console.error('Erro ao buscar usuários:', error)
+        console.error('Error fetching users:', error)
       }
     }
 
     const openCreateModal = () => {
-      selectedUser.value = null
-      dialogVisible.value = true
+      // Logic to open the create user modal
     }
 
     const openEditModal = (user) => {
-      selectedUser.value = user
-      dialogVisible.value = true
+      // Logic to open the edit user modal
     }
 
     const confirmDelete = async (user) => {
-      if (confirm(`Tem certeza que deseja excluir o usuário ${user.username}?`)) {
+      if (confirm(`Are you sure you want to delete the user ${user.username}?`)) {
         try {
           await userService.deleteUser(user._id.$oid)
           fetchUsers()
         } catch (error) {
-          console.error('Erro ao excluir o usuário:', error)
+          console.error('Error deleting user:', error)
         }
       }
-    }
-
-    const handleSaved = () => {
-      dialogVisible.value = false
-      fetchUsers()
-    }
-
-    const formatDate = (timestamp) => {
-      const date = new Date(timestamp * 1000)
-      return date.toLocaleString()
     }
 
     onMounted(fetchUsers)
 
     return {
       users,
-      headers,
-      dialogVisible,
-      selectedUser,
-      fetchUsers,
+      tableHeaders,
       openCreateModal,
       openEditModal,
-      confirmDelete,
-      formatDate,
-      handleSaved
+      confirmDelete
     }
   }
 }
