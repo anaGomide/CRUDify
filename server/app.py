@@ -4,8 +4,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
-CORS(app) 
-
+CORS(app)
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client['crudify']
@@ -15,32 +14,32 @@ collection = db['users']
 def index():
     return "API de Usuários - Back-end rodando!"
 
-# Endpoint para obter todos os usuários
-@app.route('/users', methods=['GET'])
-def get_users():
+# Rota para listar todos os usuários
+@app.route('/users/list', methods=['GET'])
+def list_users():
     users = list(collection.find())
     for user in users:
         user['_id'] = str(user['_id'])
     return jsonify(users)
 
-# Endpoint para obter um usuário individual
-@app.route('/users/<id>', methods=['GET'])
-def get_user(id):
+# Rota para obter um usuário individual
+@app.route('/users/view/<id>', methods=['GET'])
+def view_user(id):
     user = collection.find_one({'_id': ObjectId(id)})
     if user:
         user['_id'] = str(user['_id'])
         return jsonify(user)
     return jsonify({'error': 'Usuário não encontrado'}), 404
 
-# Endpoint para criar um novo usuário
-@app.route('/users', methods=['POST'])
+# Rota para criar um novo usuário
+@app.route('/users/create', methods=['POST'])
 def create_user():
     data = request.json
     result = collection.insert_one(data)
     return jsonify({'_id': str(result.inserted_id)}), 201
 
-# Endpoint para atualizar um usuário existente
-@app.route('/users/<id>', methods=['PUT'])
+# Rota para atualizar um usuário existente
+@app.route('/users/update/<id>', methods=['PUT'])
 def update_user(id):
     data = request.json
     result = collection.update_one({'_id': ObjectId(id)}, {'$set': data})
@@ -48,8 +47,8 @@ def update_user(id):
         return jsonify({'message': 'Usuário atualizado!'})
     return jsonify({'error': 'Nenhum usuário atualizado!'}), 404
 
-# Endpoint para deletar um usuário
-@app.route('/users/<id>', methods=['DELETE'])
+# Rota para deletar um usuário
+@app.route('/users/delete/<id>', methods=['DELETE'])
 def delete_user(id):
     result = collection.delete_one({'_id': ObjectId(id)})
     if result.deleted_count:
