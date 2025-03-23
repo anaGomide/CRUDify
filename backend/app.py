@@ -4,9 +4,9 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
-CORS(app)  # Permite requisições de outros domínios (importante para o front-end)
+CORS(app) 
 
-# Conecte-se ao MongoDB
+
 client = MongoClient('mongodb://localhost:27017/')
 db = client['crudify']
 collection = db['users']
