@@ -1,11 +1,20 @@
 <template>
-  <v-container>
-    <v-btn class="mb-4" color="primary" @click="openCreateModal">
-      Create User
-    </v-btn>
+   <v-container class="main-page-container">
+    <div class="main-page-container__header">
+      <h1 class="main-page-container__tittle">List Users</h1>
+      <v-btn
+        class="main-page-container__insert-button mb-4"
+        color="primary"
+        @click="openCreateModal"
+      >
+        Insert user
+      </v-btn>
+    </div>
 
     <DynamicTable :items="users" :headers="tableHeaders">
-      <!-- Slot for the actions column (Edit and Delete) -->
+      <template #username="{ item }">
+        <span class="clickable" @click="openDetails(item)">{{ item.username }}</span>
+      </template>
       <template #actions="{ item }">
         <v-icon color="green" class="action-icon" @click="openEditModal(item)">
           mdi-pencil
@@ -16,6 +25,8 @@
         </v-icon>
       </template>
     </DynamicTable>
+    <UserModal v-model:visible="showModal" :isEditMode="modalIsEditMode" :userData="selectedUser" @save="handleSaveUser"
+      @cancel="handleCancel" />
   </v-container>
 </template>
 
@@ -24,19 +35,27 @@ import { ref, onMounted } from 'vue'
 import userService from '../services/userService'
 import DynamicTable from '../components/ui/DynamicTable.vue'
 import { useRouter } from 'vue-router'
+import UserModal from '../components/ui/UserModal.vue'
+import { formatDate } from "../helpers/dateHelper";
 
 export default {
   name: 'Main',
-  components: { DynamicTable },
+  components: { DynamicTable, UserModal },
   setup() {
     const router = useRouter()
     const users = ref([])
+    const showModal = ref(false)
+    const modalIsEditMode = ref(false)
+    const selectedUser = ref({
+      username: '',
+      password: '',
+      roles: [],
+      isActive: '',
+      timezone: '',
+      created_ts: '',
+      updated_ts: ''
+    })
 
-    const formatDate = (timestamp) => {
-      const date = new Date(timestamp * 1000)
-      const pad = (num) => num.toString().padStart(2, '0')
-      return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-    }
     const tableHeaders = ref([
       { field: 'username', label: 'Username', sortable: true },
       {
@@ -44,14 +63,26 @@ export default {
         label: 'Roles',
         render: (item) => Array.isArray(item.roles) ? item.roles.join(', ') : item.roles
       },
-      { field: 'preferences.timezone', label: 'Timezone' },
+      {
+        field: 'preferences.timezone',
+        label: 'Timezone',
+        render: (item) => item.preferences && item.preferences.timezone ? item.preferences.timezone : ''
+      },
       {
         field: 'active',
         label: 'Is Active?',
         render: (item) => item.active ? 'Yes' : 'No'
       },
-      { field: 'updated_ts', label: 'Last Updated At', render: (item) => formatDate(item.updated_ts) },
-      { field: 'created_ts', label: 'Created At', render: (item) => formatDate(item.created_ts) }
+      {
+        field: 'updated_ts',
+        label: 'Last Updated At',
+        render: (item) => item.updated_ts ? formatDate(item.updated_ts) : ''
+      },
+      {
+        field: 'created_ts',
+        label: 'Created At',
+        render: (item) => item.created_ts ? formatDate(item.created_ts) : ''
+      }
     ])
 
     const fetchUsers = async () => {
@@ -66,11 +97,54 @@ export default {
     }
 
     const openCreateModal = () => {
-      router.push({ name: 'UserPage' })
+      console.log('Creating new user')
+      modalIsEditMode.value = false
+      // Define selectedUser como objeto vazio para criação
+      selectedUser.value = {
+        username: '',
+        password: '',
+        roles: [],
+        isActive: '',
+        timezone: '',
+        created_ts: '',
+        updated_ts: ''
+      }
+      showModal.value = true
     }
 
     const openEditModal = (user) => {
-      router.push({ name: 'UserPage', params: { id: user._id, user: user } })
+      modalIsEditMode.value = true
+      selectedUser.value = {
+        ...user,
+        timezone: user.preferences?.timezone || ''
+      }
+      selectedUser.value.isActive = user.active ? 'Yes' : 'No'
+      showModal.value = true
+    }
+
+    const openDetails = (user) => {
+      console.log('Viewing user:', user)
+      router.push({ name: 'UserPage', params: { id: user._id } })
+    }
+
+
+    const handleSaveUser = async (payload) => {
+      try {
+        if (modalIsEditMode.value) {
+          await userService.updateUser(selectedUser.value._id, payload)
+          console.log('User updated:', payload)
+        } else {
+          await userService.createUser(payload)
+          console.log('User created:', payload)
+        }
+        await fetchUsers()
+      } catch (error) {
+        console.error(modalIsEditMode.value ? 'Error updating user:' : 'Error creating user:', error)
+      }
+    }
+
+    const handleCancel = () => {
+      showModal.value = false
     }
 
     const confirmDelete = async (user) => {
@@ -84,6 +158,7 @@ export default {
       }
     }
 
+
     onMounted(fetchUsers)
 
     return {
@@ -91,12 +166,18 @@ export default {
       tableHeaders,
       openCreateModal,
       openEditModal,
-      confirmDelete
+      openDetails,
+      confirmDelete,
+      showModal,
+      modalIsEditMode,
+      selectedUser,
+      handleSaveUser,
+      handleCancel
     }
   }
 }
 </script>
-<style scoped>
+<style lang="scss" scoped>
 .action-icon {
   /* Make the icon look clickable */
   cursor: pointer;
@@ -104,5 +185,18 @@ export default {
   margin-right: 8px;
   /* Keep icons vertically aligned with text */
   vertical-align: middle;
+}
+.clickable {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.main-page-container {
+  &__header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 12px;
+  }
 }
 </style>

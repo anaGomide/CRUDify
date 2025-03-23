@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -12,9 +13,8 @@ collection = db['users']
 
 @app.route('/')
 def index():
-    return "API de Usuários - Back-end rodando!"
+    return "API it`s run!"
 
-# Rota para listar todos os usuários
 @app.route('/users/list', methods=['GET'])
 def list_users():
     users = list(collection.find())
@@ -22,33 +22,30 @@ def list_users():
         user['_id'] = str(user['_id'])
     return jsonify(users)
 
-# Rota para obter um usuário individual
 @app.route('/users/view/<id>', methods=['GET'])
 def view_user(id):
     user = collection.find_one({'_id': ObjectId(id)})
     if user:
         user['_id'] = str(user['_id'])
         return jsonify(user)
-    return jsonify({'error': 'Usuário não encontrado'}), 404
+    return jsonify({'error': 'User Not Found'}), 404
 
-# Rota para criar um novo usuário
 @app.route('/users/create', methods=['POST'])
 def create_user():
     data = request.json
+    data['created_ts'] = datetime.utcnow().timestamp()
     result = collection.insert_one(data)
     return jsonify({'_id': str(result.inserted_id)}), 201
 
-# Rota para atualizar um usuário existente
 @app.route('/users/update/<id>', methods=['PUT'])
 def update_user(id):
     data = request.json
     data['updated_ts'] = datetime.utcnow().timestamp()
     result = collection.update_one({'_id': ObjectId(id)}, {'$set': data})
     if result.modified_count:
-        return jsonify({'message': 'Usuário atualizado!'})
+        return jsonify({'message': 'User Update!'})
     return jsonify({'error': 'Nenhum usuário atualizado!'}), 404
 
-# Rota para deletar um usuário
 @app.route('/users/delete/<id>', methods=['DELETE'])
 def delete_user(id):
     result = collection.delete_one({'_id': ObjectId(id)})

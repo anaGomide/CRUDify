@@ -1,4 +1,5 @@
 import '@mdi/font/css/materialdesignicons.css'
+import '@mdi/font/css/materialdesignicons.min.css'
 import { createApp } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as mdi from 'vuetify/lib/iconsets/mdi'
