@@ -7,12 +7,13 @@
     <DynamicTable :items="users" :headers="tableHeaders">
       <!-- Slot for the actions column (Edit and Delete) -->
       <template #actions="{ item }">
-        <v-btn icon small @click="openEditModal(item)">
-          <v-icon>mdi-pencil</v-icon>
-        </v-btn>
-        <v-btn icon small @click="confirmDelete(item)">
-          <v-icon>mdi-delete</v-icon>
-        </v-btn>
+        <v-icon color="green" class="action-icon" @click="openEditModal(item)">
+          mdi-pencil
+        </v-icon>
+
+        <v-icon color="red" class="action-icon" @click="confirmDelete(item)">
+          mdi-delete
+        </v-icon>
       </template>
     </DynamicTable>
   </v-container>
@@ -22,11 +23,13 @@
 import { ref, onMounted } from 'vue'
 import userService from '../services/userService'
 import DynamicTable from '../components/ui/DynamicTable.vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'Main',
   components: { DynamicTable },
   setup() {
+    const router = useRouter()
     const users = ref([])
 
     const formatDate = (timestamp) => {
@@ -35,16 +38,16 @@ export default {
       return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
     }
     const tableHeaders = ref([
-      { field: 'username', label: 'Username' },
-      { 
-        field: 'roles', 
-        label: 'Roles', 
-        render: (item) => Array.isArray(item.roles) ? item.roles.join(', ') : item.roles 
+      { field: 'username', label: 'Username', sortable: true },
+      {
+        field: 'roles',
+        label: 'Roles',
+        render: (item) => Array.isArray(item.roles) ? item.roles.join(', ') : item.roles
       },
       { field: 'preferences.timezone', label: 'Timezone' },
-      { 
-        field: 'active', 
-        label: 'Is Active?', 
+      {
+        field: 'active',
+        label: 'Is Active?',
         render: (item) => item.active ? 'Yes' : 'No'
       },
       { field: 'updated_ts', label: 'Last Updated At', render: (item) => formatDate(item.updated_ts) },
@@ -63,17 +66,17 @@ export default {
     }
 
     const openCreateModal = () => {
-      // Logic to open the create user modal
+      router.push({ name: 'UserPage' })
     }
 
     const openEditModal = (user) => {
-      // Logic to open the edit user modal
+      router.push({ name: 'UserPage', params: { id: user._id, user: user } })
     }
 
     const confirmDelete = async (user) => {
       if (confirm(`Are you sure you want to delete the user ${user.username}?`)) {
         try {
-          await userService.deleteUser(user._id.$oid)
+          await userService.deleteUser(user._id)
           fetchUsers()
         } catch (error) {
           console.error('Error deleting user:', error)
@@ -93,3 +96,13 @@ export default {
   }
 }
 </script>
+<style scoped>
+.action-icon {
+  /* Make the icon look clickable */
+  cursor: pointer;
+  /* Optional spacing between icons */
+  margin-right: 8px;
+  /* Keep icons vertically aligned with text */
+  vertical-align: middle;
+}
+</style>

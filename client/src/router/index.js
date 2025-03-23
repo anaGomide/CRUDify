@@ -4,7 +4,7 @@ import UserPage from '../views/UserPage.vue'
 
 const routes = [
   { path: '/', name: 'Main', component: Main },
-  { path: '/users/:id', name: 'UserPage', component: UserPage }
+  { path: '/users/:id?', name: 'UserPage', component: UserPage }
 ]
 
 const router = createRouter({

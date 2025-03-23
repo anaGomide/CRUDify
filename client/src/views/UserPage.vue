@@ -1,64 +1,170 @@
 <template>
   <v-container>
-    <h1>Detalhes do Usuário</h1>
-    <div v-if="user">
-      <p><strong>Nome de Usuário:</strong> {{ user.username }}</p>
-      <p><strong>Funções:</strong> {{ user.roles.join(', ') }}</p>
-      <p><strong>Fuso Horário:</strong> {{ user.preferences.timezone }}</p>
-      <p><strong>Está Ativo:</strong> {{ user.active ? 'Sim' : 'Não' }}</p>
-      <p><strong>Criado Em:</strong> {{ formatDate(user.created_ts) }}</p>
-      <p><strong>Última Atualização Em:</strong> {{ user.updated_ts ? formatDate(user.updated_ts) : '-' }}</p>
-      <v-btn color="secondary" @click="openEditModal">Editar</v-btn>
-      <v-btn color="error" @click="confirmDelete">Excluir</v-btn>
-    </div>
+    <v-card class="pa-4" max-width="600" outlined>
+      <v-card-title>
+        {{ isEditMode ? 'Edit User' : 'Create User' }}
+      </v-card-title>
+      <v-card-text>
+        <v-form ref="userForm" v-model="valid" lazy-validation>
+          <v-text-field
+            v-model="user.name"
+            label="Name"
+            :rules="[rules.required]"
+            required
+          ></v-text-field>
+
+          <v-select
+            v-model="user.role"
+            :items="roleOptions"
+            label="Role"
+            :rules="[rules.required]"
+            required
+          ></v-select>
+
+          <v-text-field
+            v-model="user.createdAt"
+            label="Created At"
+            disabled
+          ></v-text-field>
+
+          <v-text-field
+            v-model="user.updatedAt"
+            label="Last Updated"
+            disabled
+          ></v-text-field>
+
+          <v-select
+            v-model="user.isActive"
+            :items="activeOptions"
+            label="Is Active?"
+            :rules="[rules.required]"
+            required
+          ></v-select>
+
+          <v-select
+            v-model="user.timezone"
+            :items="timezoneOptions"
+            label="Timezone"
+            :rules="[rules.required]"
+            required
+          ></v-select>
+        </v-form>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="primary" @click="saveUser" :disabled="!valid">
+          Save
+        </v-btn>
+        <v-btn text @click="cancel">
+          Cancel
+        </v-btn>
+      </v-card-actions>
+    </v-card>
   </v-container>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import userService from '../services/userService'
 
 export default {
   name: 'UserPage',
   setup() {
-    const route = useRoute()
     const router = useRouter()
-    const user = ref(null)
+    const route = useRoute()
 
-    const fetchUser = async () => {
+    // Modo de edição: se houver um ID nos parâmetros, estamos editando
+    const isEditMode = computed(() => !!route.params.id)
+
+    // Objeto usuário para criação/edição
+    const user = reactive({
+      name: '',
+      role: '',
+      createdAt: '',
+      updatedAt: '',
+      isActive: '',
+      timezone: ''
+    })
+
+    // Opções para os selects
+    const roleOptions = ['Administrator', 'Manager', 'Test', 'No Role']
+    const activeOptions = ['Yes', 'No']
+    const timezoneOptions = [
+      'UTC',
+      'America/New_York',
+      'America/Los_Angeles',
+      'Europe/London',
+      'Europe/Paris',
+      'Asia/Tokyo',
+      'Asia/Hong_Kong'
+    ]
+
+    // Validação básica
+    const rules = {
+      required: value => !!value || 'Required.'
+    }
+
+    const valid = ref(false)
+    const userForm = ref(null)
+
+    onMounted(() => {
+      // Se estiver no modo de edição, preenche o formulário com os dados existentes
+      // Aqui, assumimos que os dados do usuário foram passados via route.params.user.
+      // Você pode também fazer uma chamada à API usando route.params.id, se necessário.
+      if (isEditMode.value && route.params.user) {
+        const existingUser = route.params.user
+        user.name = existingUser.name || ''
+        user.role = existingUser.role || ''
+        user.createdAt = existingUser.createdAt || ''  // Considere mapear para existingUser.created_ts, se aplicável
+        user.updatedAt = existingUser.updatedAt || ''  // Considere mapear para existingUser.updated_ts, se aplicável
+        user.isActive = existingUser.isActive ? 'Yes' : 'No'
+        user.timezone = existingUser.timezone || ''
+      }
+    })
+
+    const saveUser = async () => {
+      if (!userForm.value.validate()) return
+
+      // Converter isActive de 'Yes'/'No' para booleano
+      const payload = {
+        ...user,
+        isActive: user.isActive === 'Yes'
+      }
+
       try {
-        const response = await userService.viewUser(route.params.id)
-        user.value = response.data
-      } catch (error) {
-        console.error('Erro ao buscar usuário:', error)
-      }
-    }
-
-    const openEditModal = () => {
-      // Aqui você pode abrir um modal similar ao do UserList
-      // ou redirecionar para uma rota de edição, se preferir.
-    }
-
-    const confirmDelete = async () => {
-      if (confirm(`Tem certeza que deseja excluir o usuário ${user.value.username}?`)) {
-        try {
-          await userService.deleteUser(user.value._id.$oid)
-          router.push({ name: 'UserList' })
-        } catch (error) {
-          console.error('Erro ao excluir o usuário:', error)
+        if (isEditMode.value) {
+          await userService.updateUser(route.params.id, payload)
+          console.log('User updated:', payload)
+        } else {
+          await userService.createUser(payload)
+          console.log('User created:', payload)
         }
+        router.push({ name: 'Main' })
+      } catch (error) {
+        console.error(isEditMode.value ? 'Error updating user:' : 'Error creating user:', error)
       }
     }
 
-    const formatDate = (timestamp) => {
-      const date = new Date(timestamp * 1000)
-      return date.toLocaleString()
+    const cancel = () => {
+      router.push({ name: 'Main' })
     }
 
-    onMounted(fetchUser)
-
-    return { user, openEditModal, confirmDelete, formatDate }
+    return {
+      user,
+      isEditMode,
+      roleOptions,
+      activeOptions,
+      timezoneOptions,
+      rules,
+      valid,
+      userForm,
+      saveUser,
+      cancel
+    }
   }
 }
 </script>
+
+<style scoped>
+/* Adicione estilos específicos, se necessário */
+</style>

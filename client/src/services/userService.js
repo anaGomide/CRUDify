@@ -12,20 +12,17 @@ const userService = {
     return axios.get(`${API_URL}/users/list`)
   },
 
-  // listUsers() {
-  //   return api.get('/users/list')
-  // },
   viewUser(id) {
-    return api.get(`/users/view/${id}`)
+    return api.get(`${API_URL}/users/view/${id}`)
   },
   createUser(userData) {
-    return api.post('/users/create', userData)
-  },
+    return api.post(`${API_URL}/users/create`, userData)
+  },  
   updateUser(id, userData) {
-    return api.put(`/user/update/${id}`, userData)
-  },
+    return api.put(`${API_URL}/users/update/${id}`, userData)
+  },  
   deleteUser(id) {
-    return api.delete(`/users/delete/${id}`)
+    return api.delete(`${API_URL}/users/delete/${id}`)
   }
 }
 
