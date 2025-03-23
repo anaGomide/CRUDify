@@ -1,10 +1,20 @@
 // src/services/userService.js
-import api from '@/services/api'
+import axios from 'axios'
+import api from '../services/api'
+
+
+const API_URL = 'http://localhost:5000'
+
 
 const userService = {
+
   listUsers() {
-    return api.get('/users/list')
+    return axios.get(`${API_URL}/users/list`)
   },
+
+  // listUsers() {
+  //   return api.get('/users/list')
+  // },
   viewUser(id) {
     return api.get(`/users/view/${id}`)
   },
