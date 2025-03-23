@@ -18,8 +18,8 @@
           <v-select v-model="localUser.active" :items="activeOptions" label="Active?" item-title="text"
             item-value="value" :rules="[rules.required]" required></v-select>
 
-          <v-select v-model="localUser.timezone" :items="timezoneOptions" label="Timezone" :rules="[rules.required]"
-            required></v-select>
+            <v-text-field  v-model="localUser.timezone" label="Timezone" :rules="[rules.required]"
+            required></v-text-field>
 
           <template v-if="isEditMode">
             <!-- Use computed properties to display formatted dates -->
@@ -82,15 +82,6 @@ export default {
       { text: 'Yes', value: true },
       { text: 'No', value: false }
     ]
-    const timezoneOptions = [
-      'UTC',
-      'America/New_York',
-      'America/Los_Angeles',
-      'Europe/London',
-      'Europe/Paris',
-      'Asia/Tokyo',
-      'Asia/Hong_Kong'
-    ]
     const rules = {
       required: value => value !== null && value !== undefined && value !== '' || 'Required.'
     }
@@ -149,7 +140,6 @@ export default {
       localUser,
       roleOptions,
       activeOptions,
-      timezoneOptions,
       rules,
       handleSave,
       handleCancel,

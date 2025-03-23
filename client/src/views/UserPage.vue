@@ -4,30 +4,32 @@
       <v-card-title>User Details</v-card-title>
       <v-card-text v-if="userLoaded">
         <table class="user-details-table">
-          <tr>
-            <td><strong>Username:</strong></td>
-            <td>{{ user.username }}</td>
-          </tr>
-          <tr>
-            <td><strong>Roles:</strong></td>
-            <td>{{ Array.isArray(user.roles) ? user.roles.join(', ') : '' }}</td>
-          </tr>
-          <tr>
-            <td><strong>Timezone:</strong></td>
-            <td>{{ user.preferences?.timezone }}</td>
-          </tr>
-          <tr>
-            <td><strong>Active:</strong></td>
-            <td>{{ user.active ? 'Yes' : 'No' }}</td>
-          </tr>
-          <tr v-if="user.created_ts">
-            <td><strong>Created At:</strong></td>
-            <td>{{ formatDate(user.created_ts) }}</td>
-          </tr>
-          <tr v-if="user.updated_ts">
-            <td><strong>Last Updated:</strong></td>
-            <td>{{ formatDate(user.updated_ts) }}</td>
-          </tr>
+          <tbody>
+            <tr>
+              <td><strong>Username:</strong></td>
+              <td>{{ user.username }}</td>
+            </tr>
+            <tr>
+              <td><strong>Roles:</strong></td>
+              <td>{{ Array.isArray(user.roles) ? user.roles.join(', ') : '' }}</td>
+            </tr>
+            <tr>
+              <td><strong>Timezone:</strong></td>
+              <td>{{ user.preferences?.timezone }}</td>
+            </tr>
+            <tr>
+              <td><strong>Active:</strong></td>
+              <td>{{ user.active ? 'Yes' : 'No' }}</td>
+            </tr>
+            <tr v-if="user.created_ts">
+              <td><strong>Created At:</strong></td>
+              <td>{{ formatDate(user.created_ts) }}</td>
+            </tr>
+            <tr v-if="user.updated_ts">
+              <td><strong>Last Updated:</strong></td>
+              <td>{{ formatDate(user.updated_ts) }}</td>
+            </tr>
+          </tbody>
         </table>
       </v-card-text>
       <v-card-text v-else>
@@ -51,6 +53,7 @@
     />
   </v-container>
 </template>
+
 
 <script>
 import { reactive, ref, onMounted } from 'vue'
@@ -90,6 +93,10 @@ export default {
     }
 
     const openEditModal = () => {
+      user.value = {
+        ...user,
+        timezone: user.preferences?.timezone || ''
+      }
       showModal.value = true
     }
 

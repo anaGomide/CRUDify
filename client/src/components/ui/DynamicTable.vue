@@ -25,7 +25,7 @@
               color="green"
               class="action-icon"
             >
-              mdi-pencil
+            mdi-pencil-outline
             </v-icon>
             <v-icon
               color="red"

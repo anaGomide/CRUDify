@@ -4,7 +4,7 @@
       <h1 class="main-page-container__tittle">List Users</h1>
       <v-btn
         class="main-page-container__insert-button mb-4"
-        color="primary"
+        color="#684b6e"
         @click="openCreateModal"
       >
         Insert user
@@ -17,11 +17,11 @@
       </template>
       <template #actions="{ item }">
         <v-icon color="green" class="action-icon" @click="openEditModal(item)">
-          mdi-pencil
+          mdi-pencil-outline
         </v-icon>
 
         <v-icon color="red" class="action-icon" @click="confirmDelete(item)">
-          mdi-delete
+          mdi-trash-can-outline
         </v-icon>
       </template>
     </DynamicTable>
@@ -99,7 +99,6 @@ export default {
     const openCreateModal = () => {
       console.log('Creating new user')
       modalIsEditMode.value = false
-      // Define selectedUser como objeto vazio para criação
       selectedUser.value = {
         username: '',
         password: '',
@@ -179,11 +178,8 @@ export default {
 </script>
 <style lang="scss" scoped>
 .action-icon {
-  /* Make the icon look clickable */
   cursor: pointer;
-  /* Optional spacing between icons */
   margin-right: 8px;
-  /* Keep icons vertically aligned with text */
   vertical-align: middle;
 }
 .clickable {
