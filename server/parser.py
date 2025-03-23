@@ -14,7 +14,8 @@ class User:
     roles: list
     preferences: UserPreferences
     active: bool
-    created_ts: float  
+    created_ts: float
+    updated_ts: float
 
 def parse_roles(data):
     roles = []
@@ -31,7 +32,7 @@ def main():
     db = client['crudify']
     collection = db['users']
     
-    with open('server/data.json', 'r', encoding='utf-8') as file:
+    with open('data.json', 'r', encoding='utf-8') as file:
         data = json.load(file)
         
     users_list = data.get("users", data)
@@ -39,11 +40,12 @@ def main():
     for item in users_list:
         created_at_str = item.get('created_at')
         if created_at_str:
-           
             dt = datetime.strptime(created_at_str, "%Y-%m-%dT%H:%M:%SZ")
             created_ts = dt.timestamp()
         else:
             created_ts = datetime.utcnow().timestamp()
+        
+        updated_ts = datetime.utcnow().timestamp()
             
         user = User(
             username=item.get('user'),
@@ -51,7 +53,8 @@ def main():
             roles=parse_roles(item),
             preferences=UserPreferences(timezone=item.get('user_timezone')),
             active=item.get('is_user_active', True),
-            created_ts=created_ts
+            created_ts=created_ts,
+            updated_ts=updated_ts
         )
         resultado = collection.insert_one({
             'username': user.username,
@@ -59,7 +62,8 @@ def main():
             'roles': user.roles,
             'preferences': user.preferences.__dict__,
             'active': user.active,
-            'created_ts': user.created_ts
+            'created_ts': user.created_ts,
+            'updated_ts': user.updated_ts
         })
         print(f"Usuário {user.username} inserido com _id: {resultado.inserted_id}")
 

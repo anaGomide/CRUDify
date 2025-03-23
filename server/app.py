@@ -42,6 +42,7 @@ def create_user():
 @app.route('/users/update/<id>', methods=['PUT'])
 def update_user(id):
     data = request.json
+    data['updated_ts'] = datetime.utcnow().timestamp()
     result = collection.update_one({'_id': ObjectId(id)}, {'$set': data})
     if result.modified_count:
         return jsonify({'message': 'Usuário atualizado!'})
