@@ -44,13 +44,8 @@
     </v-card>
 
     <!-- Modal para edição -->
-    <UserModal
-      v-model:visible="showModal"
-      :isEditMode="true"
-      :userData="user"
-      @save="handleSaveUser"
-      @cancel="handleCancel"
-    />
+    <UserModal v-model:visible="showModal" :isEditMode="true" :userData="user" @save="handleSaveUser"
+      @cancel="handleCancel" />
   </v-container>
 </template>
 
@@ -74,7 +69,9 @@ export default {
       password: '',
       roles: [],
       active: false,
-      timezone: '',
+      preferences: {
+        timezone: ''
+      },
       created_ts: '',
       updated_ts: ''
     })
@@ -84,7 +81,9 @@ export default {
     const loadUser = async () => {
       try {
         const response = await userService.viewUser(route.params.id)
+        console.log('User loaded:', response.data)
         Object.assign(user, response.data)
+        user.timezone = user.preferences?.timezone || ''
         userLoaded.value = true
       } catch (error) {
         console.error('Error fetching user:', error)
@@ -93,10 +92,6 @@ export default {
     }
 
     const openEditModal = () => {
-      user.value = {
-        ...user,
-        timezone: user.preferences?.timezone || ''
-      }
       showModal.value = true
     }
 
